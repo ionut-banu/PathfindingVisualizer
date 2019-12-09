@@ -15,8 +15,19 @@
 
 .node-visited {
   background-color: blue;
+  animation-name: animate-visited;
+  animation-duration: 1s;
 }
 
 .node-short {
   background-color: yellow;
+}
+
+@keyframes animate-visited {
+  from {
+    background-color: cyan;
+  }
+  to {
+    background-color: blue;
+  }
 }
