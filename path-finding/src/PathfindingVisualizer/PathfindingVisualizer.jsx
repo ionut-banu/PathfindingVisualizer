@@ -12,10 +12,6 @@ const START_NODE_COL = 15;
 const FINISH_NODE_ROW = 15;
 const FINISH_NODE_COL = 35;
 
-const START_NODE_ClS = 'node-start';
-const FINISH_NODE_ClS = 'node-finish';
-const SHORT_NODE_CLS = 'node-short';
-
 export default class PathfindingVisualizer extends Component {
   constructor(props) {
     super(props);
@@ -39,28 +35,27 @@ export default class PathfindingVisualizer extends Component {
     const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
     const visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
     this.animateNodes(visitedNodesInOrder, 'node-visited', 0);
+    this.animateNodes(visitedNodesInOrder, { isVisited: true }, 0);
     const nodesInShortestPath = getNodesInShortestPath(finishNode);
     this.animateNodes(
       nodesInShortestPath,
-      SHORT_NODE_CLS,
+      { isShortPath: true },
       visitedNodesInOrder.length
     );
   }
 
-  animateNodes(nodesInOrder, className, delay) {
+  animateNodes(nodesInOrder, animation, delay) {
     setTimeout(() => {
       for (let i = 0; i < nodesInOrder.length; i++) {
         setTimeout(() => {
           const node = nodesInOrder[i];
-          if (!node.isStart && !node.isFinish) {
-            node.ref.current.updateExtraClassName(className);
-            if (i + 1 < nodesInOrder.length && !nodesInOrder[i + 1].isFinish)
-              nodesInOrder[i + 1].ref.current.updateExtraClassName(
-                SHORT_NODE_CLS
-              );
-          } else if (node.isFinish && className === SHORT_NODE_CLS) {
-            this.setState({ clearDisabled: false });
-          }
+          node.ref.current.setState(animation);
+          if (i + 1 < nodesInOrder.length && !nodesInOrder[i + 1].isFinish)
+            nodesInOrder[i + 1].ref.current.setState({ isCurrent: true });
+          if (node.isFinish)
+            if (node.ref.current.state.isShortPath) {
+              this.setState({ clearDisabled: false });
+            }
         }, 5 * i);
       }
     }, 5 * delay);
@@ -70,7 +65,12 @@ export default class PathfindingVisualizer extends Component {
     const { grid } = this.state;
     for (const row of grid) {
       for (const node of row) {
-        node.ref.current.initNode();
+        node.ref.current.setState({
+          cost: 0,
+          isVisited: false,
+          isShortPath: false,
+          isCurrent: false
+        });
         node.distance = Infinity;
         node.isVisited = false;
       }
@@ -101,6 +101,10 @@ export default class PathfindingVisualizer extends Component {
 
     return (
       <>
+        <div className='navbar'>
+          <span className='brand'>Visualizer</span>
+          <span className='nav-item'>Visualize</span>
+        </div>
         <button
           onClick={() => this.visualizeDijkstra()}
           disabled={this.state.visualizeDisabled}
@@ -131,8 +135,7 @@ export default class PathfindingVisualizer extends Component {
                     cost,
                     isStart,
                     isFinish,
-                    isWall,
-                    isVisited
+                    isWall
                   } = node;
                   return (
                     <Node
@@ -144,7 +147,6 @@ export default class PathfindingVisualizer extends Component {
                       isStart={isStart}
                       isFinish={isFinish}
                       isWall={isWall}
-                      isVisited={isVisited}
                     ></Node>
                   );
                 })}

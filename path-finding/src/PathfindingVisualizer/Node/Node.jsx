@@ -2,31 +2,43 @@ import React, { Component } from 'react';
 
 import './Node.css';
 
+const START_NODE_ClS = 'node-start';
+const FINISH_NODE_ClS = 'node-finish';
+const WALL_NODE_CLS = 'node-wall';
+const SHORT_NODE_CLS = 'node-short';
+const VISITED_NODE_CLS = 'node-visited';
+const CURRENT_NODE_CLS = 'node-current';
+
 export default class Node extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      extraClassName: '',
-      cost: 0
+      cost: 0,
+      isVisited: false,
+      isShortPath: false,
+      isCurrent: false
     };
   }
 
-  updateExtraClassName(className) {
-    this.setState({ extraClassName: className });
-  }
-
-  initNode() {
+  getExtraClassName(className) {
     const { isStart, isFinish, isWall } = this.props;
-    const extraClassName = isFinish
-      ? 'node-finish'
+    const { isVisited, isShortPath, isCurrent } = this.state;
+    return isFinish
+      ? FINISH_NODE_ClS
       : isStart
-      ? 'node-start'
+      ? START_NODE_ClS
       : isWall
-      ? 'node-wall'
+      ? WALL_NODE_CLS
+      : isShortPath
+      ? SHORT_NODE_CLS
+      : isVisited
+      ? VISITED_NODE_CLS
+      : isCurrent
+      ? CURRENT_NODE_CLS
       : '';
-
-    this.updateExtraClassName(extraClassName);
   }
+
+  initNode() {}
 
   componentDidMount() {
     this.initNode();
@@ -34,7 +46,7 @@ export default class Node extends Component {
 
   render() {
     return (
-      <div className={'node ' + this.state.extraClassName}>
+      <div className={'node ' + this.getExtraClassName()}>
         {this.state.cost}
       </div>
     );
