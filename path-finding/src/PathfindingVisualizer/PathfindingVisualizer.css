@@ -1,7 +1,10 @@
 .grid {
-  margin: 100px 0 0;
+  margin: 50px 0 0;
 }
 
+.grid-row {
+  line-height: 1;
+}
 .navbar {
   background-color: rgba(20, 22, 31, 0.808);
   height: 100%;
@@ -20,4 +23,6 @@
 .nav-item {
   display: inline-block;
   vertical-align: middle;
+  margin-left: 15px;
+  font-size: 1.7em;
 }

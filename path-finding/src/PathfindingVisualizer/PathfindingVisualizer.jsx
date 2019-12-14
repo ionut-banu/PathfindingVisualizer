@@ -1,21 +1,31 @@
 import React, { Component } from 'react';
 import Node from './Node/Node';
-import { dijkstra, getNodesInShortestPath } from '../algorithms/dijkstra';
-import { getAllNodes, computeRandomCost } from '../util/util';
+import { dijkstra } from '../algorithms/dijkstra';
+import { dfs } from '../algorithms/dfs';
+import { bfs } from '../algorithms/bfs';
+import { computeRandomCost, getNodesInShortestPath } from '../util/util';
+import { Navbar, NavDropdown, Nav } from 'react-bootstrap';
 
 import './PathfindingVisualizer.css';
 
+const DIJKSTRA = 'dijkstra';
+const DFS = 'dfs';
+const BFS = 'bfs';
+
 const MAX_COST = 5;
+
+const SPEED = 20;
 
 const START_NODE_ROW = 10;
 const START_NODE_COL = 15;
-const FINISH_NODE_ROW = 15;
+const FINISH_NODE_ROW = 14;
 const FINISH_NODE_COL = 35;
 
 export default class PathfindingVisualizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      algorithm: DFS,
       grid: [],
       clearDisabled: true,
       visualizeDisabled: false,
@@ -28,18 +38,56 @@ export default class PathfindingVisualizer extends Component {
     this.setState({ grid: grid });
   }
 
-  visualizeDijkstra() {
+  visualize() {
     this.setAllButtons(true);
     const { grid } = this.state;
     const startNode = grid[START_NODE_ROW][START_NODE_COL];
     const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+    const { algorithm } = this.state;
+    if (algorithm != null) {
+      switch (algorithm) {
+        case DIJKSTRA:
+          this.visualizeDijkstra(grid, startNode, finishNode);
+          break;
+        case DFS:
+          this.visualizeDfs(grid, startNode, finishNode);
+          break;
+        case BFS:
+          this.visualizeBfs(grid, startNode, finishNode);
+          break;
+      }
+    }
+  }
+
+  visualizeDijkstra(grid, startNode, finishNode) {
     const visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
-    this.animateNodes(visitedNodesInOrder, 'node-visited', 0);
     this.animateNodes(visitedNodesInOrder, { isVisited: true }, 0);
     const nodesInShortestPath = getNodesInShortestPath(finishNode);
     this.animateNodes(
       nodesInShortestPath,
-      { isShortPath: true },
+      { isShortPath: true, isCurrent: false },
+      visitedNodesInOrder.length
+    );
+  }
+
+  visualizeDfs(grid, startNode, finishNode) {
+    const visitedNodesInOrder = dfs(grid, startNode, finishNode);
+    this.animateNodes(visitedNodesInOrder, { isVisited: true }, 0);
+    const nodesInShortestPath = getNodesInShortestPath(finishNode);
+    this.animateNodes(
+      nodesInShortestPath,
+      { isShortPath: true, isCurrent: false },
+      visitedNodesInOrder.length
+    );
+  }
+
+  visualizeBfs(grid, startNode, finishNode) {
+    const visitedNodesInOrder = bfs(grid, startNode, finishNode);
+    this.animateNodes(visitedNodesInOrder, { isVisited: true }, 0);
+    const nodesInShortestPath = getNodesInShortestPath(finishNode);
+    this.animateNodes(
+      nodesInShortestPath,
+      { isShortPath: true, isCurrent: false },
       visitedNodesInOrder.length
     );
   }
@@ -56,26 +104,25 @@ export default class PathfindingVisualizer extends Component {
             if (node.ref.current.state.isShortPath) {
               this.setState({ clearDisabled: false });
             }
-        }, 5 * i);
+        }, SPEED * i);
       }
-    }, 5 * delay);
+    }, SPEED * delay);
   }
 
   clearGrid() {
     const { grid } = this.state;
     for (const row of grid) {
       for (const node of row) {
-        node.ref.current.setState({
-          cost: 0,
-          isVisited: false,
-          isShortPath: false,
-          isCurrent: false
-        });
+        node.ref.current.initNode();
         node.distance = Infinity;
         node.isVisited = false;
       }
     }
     this.setAllButtons(false);
+  }
+
+  setAlgorithm(eventkey, event) {
+    this.setState({ algorithm: eventkey });
   }
 
   setAllButtons(disabled) {
@@ -101,12 +148,26 @@ export default class PathfindingVisualizer extends Component {
 
     return (
       <>
-        <div className='navbar'>
-          <span className='brand'>Visualizer</span>
-          <span className='nav-item'>Visualize</span>
-        </div>
+        <Navbar bg='light' expand='lg'>
+          <Navbar.Brand>Path-finding</Navbar.Brand>
+          <Navbar.Toggle aria-controls='basic-navbar-nav' />
+          <Navbar.Collapse id='basic-navbar-nav'>
+            <Nav
+              onSelect={(eventKey, event) => this.setAlgorithm(eventKey, event)}
+              className='mr-auto'
+            >
+              <NavDropdown title='Pick algorithm' id='basic-nav-dropdown'>
+                <NavDropdown.Item eventKey={DIJKSTRA}>
+                  Dijkstra
+                </NavDropdown.Item>
+                <NavDropdown.Item eventKey={DFS}>DFS</NavDropdown.Item>
+                <NavDropdown.Item eventKey={BFS}>BFS</NavDropdown.Item>
+              </NavDropdown>
+            </Nav>
+          </Navbar.Collapse>
+        </Navbar>
         <button
-          onClick={() => this.visualizeDijkstra()}
+          onClick={() => this.visualize()}
           disabled={this.state.visualizeDisabled}
         >
           Visualize
@@ -126,7 +187,7 @@ export default class PathfindingVisualizer extends Component {
         <div className='grid'>
           {grid.map((row, rowIdx) => {
             return (
-              <div key={rowIdx}>
+              <div className='grid-row' key={rowIdx}>
                 {row.map((node, nodeIdx) => {
                   const {
                     ref,

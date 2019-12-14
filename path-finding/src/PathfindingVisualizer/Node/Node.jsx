@@ -38,7 +38,14 @@ export default class Node extends Component {
       : '';
   }
 
-  initNode() {}
+  initNode() {
+    this.setState({
+      cost: 0,
+      isVisited: false,
+      isShortPath: false,
+      isCurrent: false
+    });
+  }
 
   componentDidMount() {
     this.initNode();
