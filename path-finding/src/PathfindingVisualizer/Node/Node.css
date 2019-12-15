@@ -1,8 +1,12 @@
 .node {
-  width: 20px;
-  height: 20px;
+  width: 100%;
+  height: 100%;
   outline: 1px solid grey;
   display: inline-block;
+}
+
+.node-cost {
+  vertical-align: middle;
 }
 
 .node-start {
@@ -22,6 +26,10 @@
 .node-short,
 .node-current {
   background-color: yellow;
+}
+
+.node-wall {
+  background-color: black;
 }
 
 @keyframes animate-visited {

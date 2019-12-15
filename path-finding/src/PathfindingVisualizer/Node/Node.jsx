@@ -13,16 +13,16 @@ export default class Node extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      cost: 0,
       isVisited: false,
       isShortPath: false,
-      isCurrent: false
+      isCurrent: false,
+      isWall: false
     };
   }
 
-  getExtraClassName(className) {
-    const { isStart, isFinish, isWall } = this.props;
-    const { isVisited, isShortPath, isCurrent } = this.state;
+  getExtraClassName() {
+    const { isStart, isFinish } = this.props;
+    const { isVisited, isShortPath, isCurrent, isWall } = this.state;
     return isFinish
       ? FINISH_NODE_ClS
       : isStart
@@ -43,7 +43,8 @@ export default class Node extends Component {
       cost: 0,
       isVisited: false,
       isShortPath: false,
-      isCurrent: false
+      isCurrent: false,
+      isWall: false
     });
   }
 
@@ -51,10 +52,19 @@ export default class Node extends Component {
     this.initNode();
   }
 
+  mouseDownHandle() {
+    this.setState({ isWall: true });
+  }
+
   render() {
     return (
-      <div className={'node ' + this.getExtraClassName()}>
-        {this.state.cost}
+      <div
+        className={'node ' + this.getExtraClassName()}
+        /* onClick={() => this.setState({ isWall: true })} */
+      >
+        <span className='node-cost'>
+          {this.props.cost !== 0 ? this.props.cost : ' '}
+        </span>
       </div>
     );
   }

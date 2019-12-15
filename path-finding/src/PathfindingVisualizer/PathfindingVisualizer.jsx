@@ -19,17 +19,18 @@ const SPEED = 20;
 const START_NODE_ROW = 10;
 const START_NODE_COL = 15;
 const FINISH_NODE_ROW = 14;
-const FINISH_NODE_COL = 35;
+const FINISH_NODE_COL = 20;
 
 export default class PathfindingVisualizer extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      algorithm: DFS,
+      algorithm: DIJKSTRA,
       grid: [],
       clearDisabled: true,
       visualizeDisabled: false,
-      resetCostDisabled: false
+      resetCostDisabled: false,
+      mouseDown: false
     };
   }
 
@@ -114,10 +115,12 @@ export default class PathfindingVisualizer extends Component {
     for (const row of grid) {
       for (const node of row) {
         node.ref.current.initNode();
-        node.distance = Infinity;
         node.isVisited = false;
+        node.distance = Infinity;
+        node.cost = 0;
       }
     }
+    this.setState({ grid: grid });
     this.setAllButtons(false);
   }
 
@@ -133,14 +136,28 @@ export default class PathfindingVisualizer extends Component {
     });
   }
 
+  mouseDownHandle(ref) {
+    this.setState({ mouseDown: true });
+    ref.current.setState({ isWall: true });
+  }
+
+  mouseUpHandle = event => {
+    this.setState({ mouseDown: false });
+  };
+
+  mouseEnterHandle(ref) {
+    if (this.state.mouseDown) ref.current.setState({ isWall: true });
+  }
+
   resetCost() {
     const { grid } = this.state;
     for (const row of grid) {
       for (const node of row) {
         const cost = computeRandomCost(MAX_COST);
-        node.ref.current.setState({ cost: cost });
+        node.cost = cost;
       }
     }
+    this.setState({ grid: grid });
   }
 
   render() {
@@ -166,54 +183,63 @@ export default class PathfindingVisualizer extends Component {
             </Nav>
           </Navbar.Collapse>
         </Navbar>
-        <button
-          onClick={() => this.visualize()}
-          disabled={this.state.visualizeDisabled}
-        >
-          Visualize
-        </button>
-        <button
-          onClick={() => this.clearGrid()}
-          disabled={this.state.clearDisabled}
-        >
-          Clear
-        </button>
-        <button
-          onClick={() => this.resetCost()}
-          disabled={this.state.resetCostDisabled}
-        >
-          Reset Cost
-        </button>
-        <div className='grid'>
-          {grid.map((row, rowIdx) => {
-            return (
-              <div className='grid-row' key={rowIdx}>
-                {row.map((node, nodeIdx) => {
-                  const {
-                    ref,
-                    row,
-                    col,
-                    cost,
-                    isStart,
-                    isFinish,
-                    isWall
-                  } = node;
-                  return (
-                    <Node
-                      key={nodeIdx}
-                      ref={ref}
-                      row={row}
-                      col={col}
-                      cost={cost}
-                      isStart={isStart}
-                      isFinish={isFinish}
-                      isWall={isWall}
-                    ></Node>
-                  );
-                })}
-              </div>
-            );
-          })}
+        <div className='noselect' onMouseUp={this.mouseUpHandle}>
+          <button
+            onClick={() => this.visualize()}
+            disabled={this.state.visualizeDisabled}
+          >
+            Visualize
+          </button>
+          <button
+            onClick={() => this.clearGrid()}
+            disabled={this.state.clearDisabled}
+          >
+            Clear
+          </button>
+          <button
+            onClick={() => this.resetCost()}
+            disabled={this.state.resetCostDisabled}
+          >
+            Reset Cost
+          </button>
+          <button>Test</button>
+          <div className='grid'>
+            {grid.map((row, rowIdx) => {
+              return (
+                <div className='grid-row' key={rowIdx}>
+                  {row.map((node, nodeIdx) => {
+                    const {
+                      ref,
+                      row,
+                      col,
+                      isStart,
+                      isFinish,
+                      isWall,
+                      cost
+                    } = node;
+                    return (
+                      <div
+                        key={nodeIdx}
+                        className='node-div'
+                        onMouseDown={() => this.mouseDownHandle(ref)}
+                        onMouseEnter={() => this.mouseEnterHandle(ref)}
+                      >
+                        <Node
+                          ref={ref}
+                          row={row}
+                          col={col}
+                          isStart={isStart}
+                          isFinish={isFinish}
+                          isWall={isWall}
+                          cost={cost}
+                        ></Node>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </>
     );
@@ -237,10 +263,9 @@ const createNode = (row, col) => {
     ref: React.createRef(),
     col: col,
     row: row,
-    cost: computeRandomCost(MAX_COST),
+    cost: 0,
     isStart: START_NODE_ROW === row && START_NODE_COL === col,
     isFinish: FINISH_NODE_ROW === row && FINISH_NODE_COL === col,
-    isVisited: false,
     isWall: false,
     distance: Infinity,
     previousNode: null
