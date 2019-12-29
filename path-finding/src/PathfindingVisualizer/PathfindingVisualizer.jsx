@@ -8,9 +8,9 @@ import { Navbar, NavDropdown, Nav } from 'react-bootstrap';
 
 import './PathfindingVisualizer.css';
 
-const DIJKSTRA = 'dijkstra';
-const DFS = 'dfs';
-const BFS = 'bfs';
+const DIJKSTRA = 'Dijkstra';
+const DFS = 'DFS';
+const BFS = 'BFS';
 
 const MAX_COST = 5;
 
@@ -27,10 +27,10 @@ export default class PathfindingVisualizer extends Component {
     this.state = {
       algorithm: DIJKSTRA,
       grid: [],
-      clearDisabled: true,
+      clearNodesDisabled: false,
       visualizeDisabled: false,
       resetCostDisabled: false,
-      mouseDown: false
+      isMouseDown: false
     };
   }
 
@@ -103,21 +103,21 @@ export default class PathfindingVisualizer extends Component {
             nodesInOrder[i + 1].ref.current.setState({ isCurrent: true });
           if (node.isFinish)
             if (node.ref.current.state.isShortPath) {
-              this.setState({ clearDisabled: false });
+              this.setState({ clearNodesDisabled: false });
             }
         }, SPEED * i);
       }
     }, SPEED * delay);
   }
 
-  clearGrid() {
+  clearNodes(clearCost) {
     const { grid } = this.state;
     for (const row of grid) {
       for (const node of row) {
         node.ref.current.initNode();
         node.isVisited = false;
         node.distance = Infinity;
-        node.cost = 0;
+        if (clearCost) node.cost = 0;
       }
     }
     this.setState({ grid: grid });
@@ -131,23 +131,26 @@ export default class PathfindingVisualizer extends Component {
   setAllButtons(disabled) {
     this.setState({
       visualizeDisabled: disabled,
-      clearDisabled: disabled,
+      clearNodesDisabled: disabled,
       resetCostDisabled: disabled
     });
   }
 
-  mouseDownHandle(ref) {
-    this.setState({ mouseDown: true });
-    ref.current.setState({ isWall: true });
-  }
-
-  mouseUpHandle = event => {
-    this.setState({ mouseDown: false });
+  mouseDownHandle = (row, col) => {
+    const newGrid = toggleWall(this.state.grid, row, col);
+    this.setState({ isMouseDown: true, grid: newGrid });
   };
 
-  mouseEnterHandle(ref) {
-    if (this.state.mouseDown) ref.current.setState({ isWall: true });
-  }
+  mouseUpHandle = () => {
+    this.setState({ isMouseDown: false });
+  };
+
+  mouseEnterHandle = (row, col) => {
+    if (this.state.isMouseDown) {
+      const newGrid = toggleWall(this.state.grid, row, col);
+      this.setState({ grid: newGrid });
+    }
+  };
 
   resetCost() {
     const { grid } = this.state;
@@ -165,7 +168,7 @@ export default class PathfindingVisualizer extends Component {
 
     return (
       <>
-        <Navbar bg='light' expand='lg'>
+        <Navbar bg='light' expand='md'>
           <Navbar.Brand>Path-finding</Navbar.Brand>
           <Navbar.Toggle aria-controls='basic-navbar-nav' />
           <Navbar.Collapse id='basic-navbar-nav'>
@@ -180,22 +183,24 @@ export default class PathfindingVisualizer extends Component {
                 <NavDropdown.Item eventKey={DFS}>DFS</NavDropdown.Item>
                 <NavDropdown.Item eventKey={BFS}>BFS</NavDropdown.Item>
               </NavDropdown>
+
+              <Nav.Link
+                variant='success'
+                onClick={() => this.visualize()}
+                disabled={this.state.visualizeDisabled}
+              >
+                {`Visualize ${this.state.algorithm}`}
+              </Nav.Link>
+              <Nav.Link
+                onClick={() => this.clearNodes(false)}
+                disabled={this.state.clearNodesDisabled}
+              >
+                Clear Nodes
+              </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
         <div className='noselect' onMouseUp={this.mouseUpHandle}>
-          <button
-            onClick={() => this.visualize()}
-            disabled={this.state.visualizeDisabled}
-          >
-            Visualize
-          </button>
-          <button
-            onClick={() => this.clearGrid()}
-            disabled={this.state.clearDisabled}
-          >
-            Clear
-          </button>
           <button
             onClick={() => this.resetCost()}
             disabled={this.state.resetCostDisabled}
@@ -218,22 +223,19 @@ export default class PathfindingVisualizer extends Component {
                       cost
                     } = node;
                     return (
-                      <div
+                      <Node
                         key={nodeIdx}
-                        className='node-div'
-                        onMouseDown={() => this.mouseDownHandle(ref)}
-                        onMouseEnter={() => this.mouseEnterHandle(ref)}
-                      >
-                        <Node
-                          ref={ref}
-                          row={row}
-                          col={col}
-                          isStart={isStart}
-                          isFinish={isFinish}
-                          isWall={isWall}
-                          cost={cost}
-                        ></Node>
-                      </div>
+                        ref={ref}
+                        row={row}
+                        col={col}
+                        isStart={isStart}
+                        isFinish={isFinish}
+                        isWall={isWall}
+                        cost={cost}
+                        onMouseDown={this.mouseDownHandle}
+                        onMouseUp={this.mouseUpHandle}
+                        onMouseEnter={this.mouseEnterHandle}
+                      ></Node>
                     );
                   })}
                 </div>
@@ -270,4 +272,12 @@ const createNode = (row, col) => {
     distance: Infinity,
     previousNode: null
   };
+};
+
+const toggleWall = (grid, row, col) => {
+  const newGrid = grid.slice();
+  const node = newGrid[row][col];
+  const newNode = { ...node, isWall: !node.isWall };
+  newGrid[row][col] = newNode;
+  return newGrid;
 };

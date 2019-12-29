@@ -15,14 +15,13 @@ export default class Node extends Component {
     this.state = {
       isVisited: false,
       isShortPath: false,
-      isCurrent: false,
-      isWall: false
+      isCurrent: false
     };
   }
 
   getExtraClassName() {
-    const { isStart, isFinish } = this.props;
-    const { isVisited, isShortPath, isCurrent, isWall } = this.state;
+    const { isStart, isFinish, isWall } = this.props;
+    const { isVisited, isShortPath, isCurrent } = this.state;
     return isFinish
       ? FINISH_NODE_ClS
       : isStart
@@ -57,10 +56,13 @@ export default class Node extends Component {
   }
 
   render() {
+    const { row, col, onMouseDown, onMouseUp, onMouseEnter } = this.props;
     return (
       <div
         className={'node ' + this.getExtraClassName()}
-        /* onClick={() => this.setState({ isWall: true })} */
+        onMouseDown={() => onMouseDown(row, col)}
+        onMouseUp={() => onMouseUp()}
+        onMouseEnter={() => onMouseEnter(row, col)}
       >
         <span className='node-cost'>
           {this.props.cost !== 0 ? this.props.cost : ' '}
