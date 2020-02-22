@@ -1,7 +1,6 @@
 import {
   getAllNodes,
-  getUnvisitedNeighbors,
-  getNodesInShortestPath
+  getUnvisitedNeighbors
 } from '../util/util';
 
 export function dijkstra(grid, startNode, finishNode) {

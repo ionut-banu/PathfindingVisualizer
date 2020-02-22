@@ -16,11 +16,6 @@ const MAX_COST = 5;
 
 const SPEED = 20;
 
-const START_NODE_ROW = 10;
-const START_NODE_COL = 15;
-const FINISH_NODE_ROW = 14;
-const FINISH_NODE_COL = 20;
-
 export default class PathfindingVisualizer extends Component {
   constructor(props) {
     super(props);
@@ -30,20 +25,26 @@ export default class PathfindingVisualizer extends Component {
       clearNodesDisabled: false,
       visualizeDisabled: false,
       resetCostDisabled: false,
-      isMouseDown: false
+      isMouseDown: false,
+      isStartSelected: false,
+      isTargetSelected: false,
+      START_NODE_ROW: 10,
+      START_NODE_COL: 15,
+      FINISH_NODE_ROW: 14,
+      FINISH_NODE_COL: 20
     };
   }
 
   componentDidMount() {
-    const grid = getInitialGrid();
+    const grid = this.getInitialGrid();
     this.setState({ grid: grid });
   }
 
   visualize() {
     this.setAllButtons(true);
     const { grid } = this.state;
-    const startNode = grid[START_NODE_ROW][START_NODE_COL];
-    const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+    const startNode = grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
+    const finishNode = grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
     const { algorithm } = this.state;
     if (algorithm != null) {
       switch (algorithm) {
@@ -56,6 +57,7 @@ export default class PathfindingVisualizer extends Component {
         case BFS:
           this.visualizeBfs(grid, startNode, finishNode);
           break;
+        default:
       }
     }
   }
@@ -110,18 +112,22 @@ export default class PathfindingVisualizer extends Component {
     }, SPEED * delay);
   }
 
-  clearNodes(clearCost) {
-    const { grid } = this.state;
-    for (const row of grid) {
-      for (const node of row) {
-        node.ref.current.initNode();
-        node.isVisited = false;
-        node.distance = Infinity;
-        if (clearCost) node.cost = 0;
+  clearNodes(clearPath, clearCost) {
+    if (clearPath || clearCost) {
+      const { grid } = this.state;
+      for (const row of grid) {
+        for (const node of row) {
+          if (clearPath) {
+            node.ref.current.initNode();
+            node.isVisited = false;
+            node.distance = Infinity;
+          }
+          if (clearCost) node.cost = 0;
+        }
       }
+      this.setState({ grid: grid });
+      this.setAllButtons(false);
     }
-    this.setState({ grid: grid });
-    this.setAllButtons(false);
   }
 
   setAlgorithm(eventkey, event) {
@@ -139,18 +145,18 @@ export default class PathfindingVisualizer extends Component {
   mouseDownHandle = (row, col) => {
     const newGrid = toggleWall(this.state.grid, row, col);
     this.setState({ isMouseDown: true, grid: newGrid });
-  };
+  }
 
   mouseUpHandle = () => {
     this.setState({ isMouseDown: false });
-  };
+  }
 
   mouseEnterHandle = (row, col) => {
     if (this.state.isMouseDown) {
       const newGrid = toggleWall(this.state.grid, row, col);
       this.setState({ grid: newGrid });
     }
-  };
+  }
 
   resetCost() {
     const { grid } = this.state;
@@ -162,6 +168,32 @@ export default class PathfindingVisualizer extends Component {
     }
     this.setState({ grid: grid });
   }
+
+  getInitialGrid = () => {
+    const grid = [];
+    for (let row = 0; row < 20; row++) {
+      const currentRow = [];
+      for (let col = 0; col < 50; col++) {
+        currentRow.push(this.createNode(row, col));
+      }
+      grid.push(currentRow);
+    }
+    return grid;
+  }
+
+  createNode = (row, col) => {
+    return {
+      ref: React.createRef(),
+      col: col,
+      row: row,
+      cost: 0,
+      isStart: this.state.START_NODE_ROW === row && this.state.START_NODE_COL === col,
+      isFinish: this.state.FINISH_NODE_ROW === row && this.state.FINISH_NODE_COL === col,
+      isWall: false,
+      distance: Infinity,
+      previousNode: null
+    };
+  };
 
   render() {
     const { grid } = this.state;
@@ -176,6 +208,13 @@ export default class PathfindingVisualizer extends Component {
               onSelect={(eventKey, event) => this.setAlgorithm(eventKey, event)}
               className='mr-auto'
             >
+              <Nav.Link
+                onClick={() => this.clearNodes(true, false)}
+                disabled={this.state.clearNodesDisabled}
+              >
+                Start Node
+              </Nav.Link>
+
               <NavDropdown title='Pick algorithm' id='basic-nav-dropdown'>
                 <NavDropdown.Item eventKey={DIJKSTRA}>
                   Dijkstra
@@ -192,22 +231,27 @@ export default class PathfindingVisualizer extends Component {
                 {`Visualize ${this.state.algorithm}`}
               </Nav.Link>
               <Nav.Link
-                onClick={() => this.clearNodes(false)}
+                onClick={() => this.resetCost()}
                 disabled={this.state.clearNodesDisabled}
               >
-                Clear Nodes
+                Randomize Cost
+              </Nav.Link>
+              <Nav.Link
+                onClick={() => this.clearNodes(true, false)}
+                disabled={this.state.clearNodesDisabled}
+              >
+                Clear Path
+              </Nav.Link>
+              <Nav.Link
+                onClick={() => this.clearNodes(false, true)}
+                disabled={this.state.clearNodesDisabled}
+              >
+                Clear Cost
               </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
         <div className='noselect' onMouseUp={this.mouseUpHandle}>
-          <button
-            onClick={() => this.resetCost()}
-            disabled={this.state.resetCostDisabled}
-          >
-            Reset Cost
-          </button>
-          <button>Test</button>
           <div className='grid'>
             {grid.map((row, rowIdx) => {
               return (
@@ -248,31 +292,7 @@ export default class PathfindingVisualizer extends Component {
   }
 }
 
-const getInitialGrid = () => {
-  const grid = [];
-  for (let row = 0; row < 20; row++) {
-    const currentRow = [];
-    for (let col = 0; col < 50; col++) {
-      currentRow.push(createNode(row, col));
-    }
-    grid.push(currentRow);
-  }
-  return grid;
-};
 
-const createNode = (row, col) => {
-  return {
-    ref: React.createRef(),
-    col: col,
-    row: row,
-    cost: 0,
-    isStart: START_NODE_ROW === row && START_NODE_COL === col,
-    isFinish: FINISH_NODE_ROW === row && FINISH_NODE_COL === col,
-    isWall: false,
-    distance: Infinity,
-    previousNode: null
-  };
-};
 
 const toggleWall = (grid, row, col) => {
   const newGrid = grid.slice();

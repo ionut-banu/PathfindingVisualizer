@@ -1,7 +1,5 @@
 import {
-  getAllNodes,
-  getUnvisitedNeighbors,
-  getNodesInShortestPath
+  getUnvisitedNeighbors
 } from '../util/util';
 
 export function bfs(grid, startNode, finishNode) {
