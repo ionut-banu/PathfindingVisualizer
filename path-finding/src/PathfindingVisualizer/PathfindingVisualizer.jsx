@@ -43,8 +43,10 @@ export default class PathfindingVisualizer extends Component {
   visualize() {
     this.setAllButtons(true);
     const { grid } = this.state;
-    const startNode = grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
-    const finishNode = grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
+    const startNode =
+      grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
+    const finishNode =
+      grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
     const { algorithm } = this.state;
     if (algorithm != null) {
       switch (algorithm) {
@@ -143,20 +145,34 @@ export default class PathfindingVisualizer extends Component {
   }
 
   mouseDownHandle = (row, col) => {
-    const newGrid = toggleWall(this.state.grid, row, col);
-    this.setState({ isMouseDown: true, grid: newGrid });
-  }
+    const { grid } = this.state;
+    for (const row of grid) {
+      for (const node of row) {
+        if (node.isStart) {
+          this.setState({ isStartSelected: true });
+          break;
+        }
+      }
+    }
+    const newGrid = grid.slice();
+    const node = newGrid[row][col];
+    const newNode = { ...node, isStart: true };
+    newGrid[row][col] = newNode;
+    this.setState({ grid: newGrid });
+    //const newGrid = toggleWall(this.state.grid, row, col);
+    //this.setState({ isMouseDown: true, grid: newGrid });
+  };
 
   mouseUpHandle = () => {
     this.setState({ isMouseDown: false });
-  }
+  };
 
   mouseEnterHandle = (row, col) => {
     if (this.state.isMouseDown) {
       const newGrid = toggleWall(this.state.grid, row, col);
       this.setState({ grid: newGrid });
     }
-  }
+  };
 
   resetCost() {
     const { grid } = this.state;
@@ -179,7 +195,7 @@ export default class PathfindingVisualizer extends Component {
       grid.push(currentRow);
     }
     return grid;
-  }
+  };
 
   createNode = (row, col) => {
     return {
@@ -187,8 +203,11 @@ export default class PathfindingVisualizer extends Component {
       col: col,
       row: row,
       cost: 0,
-      isStart: this.state.START_NODE_ROW === row && this.state.START_NODE_COL === col,
-      isFinish: this.state.FINISH_NODE_ROW === row && this.state.FINISH_NODE_COL === col,
+      isStart:
+        this.state.START_NODE_ROW === row && this.state.START_NODE_COL === col,
+      isFinish:
+        this.state.FINISH_NODE_ROW === row &&
+        this.state.FINISH_NODE_COL === col,
       isWall: false,
       distance: Infinity,
       previousNode: null
@@ -213,6 +232,13 @@ export default class PathfindingVisualizer extends Component {
                 disabled={this.state.clearNodesDisabled}
               >
                 Start Node
+              </Nav.Link>
+
+              <Nav.Link
+                onClick={() => this.clearNodes(true, false)}
+                disabled={this.state.clearNodesDisabled}
+              >
+                Target Node
               </Nav.Link>
 
               <NavDropdown title='Pick algorithm' id='basic-nav-dropdown'>
@@ -291,8 +317,6 @@ export default class PathfindingVisualizer extends Component {
     );
   }
 }
-
-
 
 const toggleWall = (grid, row, col) => {
   const newGrid = grid.slice();
