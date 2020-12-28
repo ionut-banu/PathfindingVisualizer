@@ -5,27 +5,6 @@
 .grid-row {
   height: 1.4em;
 }
-.navbar {
-  background-color: rgba(20, 22, 31, 0.808);
-  height: 100%;
-  width: 100%;
-  text-align: left;
-}
-
-.brand {
-  margin-left: 15px;
-  vertical-align: middle;
-  color: white;
-  font-size: 1.7em;
-  display: inline-block;
-}
-
-.nav-item {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 15px;
-  font-size: 1.7em;
-}
 
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */

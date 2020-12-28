@@ -16,7 +16,7 @@ function getModalStyle() {
 const useStyles = makeStyles((theme) => ({
   paper: {
     position: 'absolute',
-    width: 400,
+    width: 500,
     backgroundColor: theme.palette.background.paper,
     border: '2px solid #000',
     boxShadow: theme.shadows[5],
@@ -41,16 +41,19 @@ export default function SimpleModal() {
   const body = (
     <div style={modalStyle} className={classes.paper}>
       <h2 id='simple-modal-title'>Path Finder Instructions</h2>
-      <p id='simple-modal-description'>
-        Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-      </p>
+      <p> &#8226; Drag the start square (green) and finish square (red) to the desired locations </p>
+      <p> &#8226; Click on an empty square and drag across the grid to build walls </p>
+      <p> &#8226; Select the algorithm you want to visualize from the "Pick algorithm" dropdown </p>
+      <p> &#8226; If you choose the Djkstra algorithm you can add random costs for going through each node by clicking "Randomize Cost" </p>
+      <p> &#8226; Tap on the button that displays the algorithm name to start the visualization </p>
+      <p> &#8226; When visualization is done click "Clear" to wipe the grid </p>
     </div>
   );
 
   return (
     <div>
       <button type='button' onClick={handleOpen}>
-        Open Modal
+        Help
       </button>
       <Modal
         open={open}

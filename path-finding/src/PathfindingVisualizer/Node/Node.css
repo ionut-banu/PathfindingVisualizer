@@ -11,10 +11,12 @@
 
 .node-start {
   background-color: green;
+  cursor: pointer;
 }
 
 .node-finish {
   background-color: red;
+  cursor: pointer;
 }
 
 .node-visited {

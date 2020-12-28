@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Navbar, NavDropdown, Nav } from 'react-bootstrap';
-import Modal from '@material-ui/core/Modal';
+import { Navbar, NavDropdown, Nav, Button } from 'react-bootstrap';
 import Node from './Node/Node';
 import { dijkstra } from '../algorithms/dijkstra';
 import { dfs } from '../algorithms/dfs';
@@ -26,6 +25,7 @@ export default class PathfindingVisualizer extends Component {
       grid: [],
       interactDisabled: false,
       visualizeDisabled: false,
+      clearDisabled: false,
       resetCostDisabled: false,
       isMouseDown: false,
       isStartSelected: false,
@@ -71,7 +71,7 @@ export default class PathfindingVisualizer extends Component {
     };
   };
 
-  setAlgorithm(eventkey, event) {
+  setAlgorithm(eventkey) {
     this.setState({ algorithm: eventkey });
   }
 
@@ -79,6 +79,7 @@ export default class PathfindingVisualizer extends Component {
     this.setState({
       visualizeDisabled: disabled,
       interactDisabled: disabled,
+      clearDisabled: disabled,
       resetCostDisabled: disabled,
     });
   }
@@ -148,14 +149,14 @@ export default class PathfindingVisualizer extends Component {
             nodesInOrder[i + 1].ref.current.setState({ isCurrent: true });
           if (node.isTarget)
             if (node.ref.current.state.isShortPath) {
-              this.setState({ interactDisabled: false });
+              this.setState({ clearDisabled: false });
             }
         }, SPEED * i);
       }
     }, SPEED * delay);
   }
 
-  clearNodes(clearPath, clearCost) {
+  clearNodes(clearPath, clearCost, clearWall) {
     if (clearPath || clearCost) {
       const { grid } = this.state;
       for (const row of grid) {
@@ -167,6 +168,7 @@ export default class PathfindingVisualizer extends Component {
             node.previousNode = null;
           }
           if (clearCost) node.cost = 0;
+          if (clearWall) node.isWall = false;
         }
       }
       this.setState({ grid: grid });
@@ -282,46 +284,50 @@ export default class PathfindingVisualizer extends Component {
 
     return (
       <>
-        <Navbar bg='light' expand='md'>
-          <Navbar.Brand>Path-finding</Navbar.Brand>
-          <Navbar.Toggle aria-controls='basic-navbar-nav' />
-          <Navbar.Collapse id='basic-navbar-nav'>
+        <Navbar collapseOnSelect expand="lg" bg="primary" variant="dark">
+          <Navbar.Brand href="#home">Path-finding</Navbar.Brand>
+          <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+          <Navbar.Collapse id="responsive-navbar-nav">
             <Nav
-              onSelect={(eventKey, event) => this.setAlgorithm(eventKey, event)}
+              onSelect={(eventKey, event) => this.setAlgorithm(eventKey)}
               className='mr-auto'
             >
-              <NavDropdown title='Pick algorithm' id='basic-nav-dropdown'>
-                <NavDropdown.Item eventKey={DIJKSTRA}>
+              <NavDropdown title="Pick algorithm" id="collasible-nav-dropdown" disabled={this.state.visualizeDisabled}>
+              <NavDropdown.Item eventKey={DIJKSTRA}>
                   Dijkstra
                 </NavDropdown.Item>
                 <NavDropdown.Item eventKey={DFS}>DFS</NavDropdown.Item>
                 <NavDropdown.Item eventKey={BFS}>BFS</NavDropdown.Item>
               </NavDropdown>
-
               <Nav.Link
-                variant='success'
-                onClick={() => this.visualize()}
-                disabled={this.state.visualizeDisabled}
-              >
-                {`Visualize ${this.state.algorithm}`}
-              </Nav.Link>
-              <Nav.Link
-                onClick={() => this.clearNodes(true, true)}
-                disabled={this.state.interactDisabled}
+                onClick={() => this.clearNodes(true, true, true)}
+                disabled={this.state.clearDisabled}
               >
                 Clear
               </Nav.Link>
               <Nav.Link
                 onClick={() => this.resetCost()}
-                disabled={this.state.interactDisabled}
+                disabled={this.state.resetCostDisabled || this.state.algorithm != DIJKSTRA}
               >
                 Randomize Cost
               </Nav.Link>
+              
+            </Nav>
 
+            <Nav>
               <SimpleModal></SimpleModal>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
+
+        <br></br>
+
+        <Button variant="primary" size="lg"
+          onClick={() => this.visualize()}
+          disabled={this.state.visualizeDisabled}>
+          {`${this.state.algorithm}`}
+        </Button>
+        
         <div className='noselect' onMouseUp={this.mouseUpHandle}>
           <div className='grid'>
             {grid.map((row, rowIdx) => {
