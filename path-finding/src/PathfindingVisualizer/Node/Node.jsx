@@ -15,14 +15,14 @@ export default class Node extends Component {
     this.state = {
       isVisited: false,
       isShortPath: false,
-      isCurrent: false
+      isCurrent: false,
     };
   }
 
   getExtraClassName() {
-    const { isStart, isFinish, isWall } = this.props;
+    const { isStart, isTarget, isWall } = this.props;
     const { isVisited, isShortPath, isCurrent } = this.state;
-    return isFinish
+    return isTarget
       ? FINISH_NODE_ClS
       : isStart
       ? START_NODE_ClS
@@ -43,7 +43,7 @@ export default class Node extends Component {
       isVisited: false,
       isShortPath: false,
       isCurrent: false,
-      isWall: false
+      isWall: false,
     });
   }
 
@@ -51,22 +51,24 @@ export default class Node extends Component {
     this.initNode();
   }
 
-  mouseDownHandle() {
-    this.setState({ isWall: true });
-  }
-
   render() {
-    const { row, col, onMouseDown, onMouseUp, onMouseEnter } = this.props;
+    const {
+      row,
+      col,
+      onMouseDown,
+      onMouseUp,
+      onMouseEnter,
+      onMouseLeave,
+    } = this.props;
     return (
       <div
         className={'node ' + this.getExtraClassName()}
         onMouseDown={() => onMouseDown(row, col)}
         onMouseUp={() => onMouseUp()}
         onMouseEnter={() => onMouseEnter(row, col)}
+        onMouseLeave={() => onMouseLeave(row, col)}
       >
-        <span className='node-cost'>
-          {this.props.cost !== 0 ? this.props.cost : ' '}
-        </span>
+        {this.props.cost !== 0 ? this.props.cost : ' '}
       </div>
     );
   }
@@ -74,5 +76,5 @@ export default class Node extends Component {
 
 export const DEFAULT_NODE = {
   row: 0,
-  col: 0
+  col: 0,
 };
